@@ -1,0 +1,26 @@
+---
+version: 0.1.0
+name: env-variable-secrets-scanner-policy
+displayName: LIKE NAME, BUT FANCIER
+createdAt: '2022-07-19T16:39:10+02:00'
+description: DESCRIPTION OF YOUR POLICY
+license: Apache-2.0
+homeURL: https://author1.website
+containersImages:
+- name: policy
+  image: "ghcr.io/kubewarden/policies/env-variable-secrets-scanner-policy:v0.1.0"
+keywords:
+- this is freeform
+links:
+- name: policy
+  url: https://github.com/yourorg/env-variable-secrets-scanner-policy/releases/download/v0.1.0/policy.wasm
+- name: source
+  url: POLICY HOMEPAGE URL
+provider:
+  name: kubewarden
+recommendations:
+- url: https://artifacthub.io/packages/helm/kubewarden/kubewarden-controller
+annotations:
+  kubewarden/resources: Pod # comma separated list
+  kubewarden/mutation: false
+  kubewarden/contextAware: false
