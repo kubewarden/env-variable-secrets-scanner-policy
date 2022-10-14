@@ -2,7 +2,8 @@
 
 ## Description
 
-This policy will reject pods that contain a secret in an environment variable in any container. 
+This policy will reject pods that contain a secret in an environment variable in any container. It scans environment 
+variables in all containers, init containers and ephemeral containers.
 This policy uses [rusty hog](https://github.com/newrelic/rusty-hog) as a secret scanner. It looks for
 all the secrets in the rusty-hog [default_rules.json](https://github.com/newrelic/rusty-hog/blob/v1.0.11/src/default_rules.json).
 
