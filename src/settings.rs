@@ -1,7 +1,4 @@
-use crate::LOG_DRAIN;
-
 use serde::{Deserialize, Serialize};
-use slog::info;
 
 // Describe the settings your policy expects when
 // loaded by the policy server.
@@ -11,9 +8,6 @@ pub(crate) struct Settings {}
 
 impl kubewarden::settings::Validatable for Settings {
     fn validate(&self) -> Result<(), String> {
-        info!(LOG_DRAIN, "starting settings validation");
-
-        // TODO: perform settings validation if applies
         Ok(())
     }
 }

@@ -1,24 +1,19 @@
-use lazy_static::lazy_static;
+use std::collections::HashSet;
+use std::fmt;
 
 use guest::prelude::*;
 use kubewarden_policy_sdk::wapc_guest as guest;
 
-use k8s_openapi::api::core::v1 as apicore;
-
+use k8s_openapi::api::core::v1::{EnvVar, PodSpec};
 extern crate kubewarden_policy_sdk as kubewarden;
-use kubewarden::{logging, protocol_version_guest, request::ValidationRequest, validate_settings};
+use encoding::all::ASCII;
+use encoding::{DecoderTrap, Encoding};
+use kubewarden::{protocol_version_guest, request::ValidationRequest, validate_settings};
+use rusty_hog_scanner::{SecretScanner, SecretScannerBuilder};
+use std::string::String;
 
 mod settings;
 use settings::Settings;
-
-use slog::{info, o, warn, Logger};
-
-lazy_static! {
-    static ref LOG_DRAIN: Logger = Logger::root(
-        logging::KubewardenDrain::new(),
-        o!("policy" => "sample-policy")
-    );
-}
 
 #[no_mangle]
 pub extern "C" fn wapc_init() {
@@ -27,41 +22,161 @@ pub extern "C" fn wapc_init() {
     register_function("protocol_version", protocol_version_guest);
 }
 
+/// Represents a secret that has been found in an env var
+#[derive(Eq, Hash, PartialEq, Debug)]
+struct SecretRejected {
+    /// nome of the container where the secret was found
+    container: String,
+    /// reason of rejection. It describes the secret that it was found
+    reason: String,
+    /// key of the env var
+    key: String,
+}
+
+impl fmt::Display for SecretRejected {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "container: {}, key: {}, reason: {}. ",
+            self.container, self.key, self.reason
+        )
+    }
+}
+
 fn validate(payload: &[u8]) -> CallResult {
     let validation_request: ValidationRequest<Settings> = ValidationRequest::new(payload)?;
 
-    info!(LOG_DRAIN, "starting validation");
-
-    // TODO: you can unmarshal any Kubernetes API type you are interested in
-    match serde_json::from_value::<apicore::Pod>(validation_request.request.object) {
-        Ok(pod) => {
-            // TODO: your logic goes here
-            if pod.metadata.name == Some("invalid-pod-name".to_string()) {
-                let pod_name = pod.metadata.name.unwrap();
-                info!(
-                    LOG_DRAIN,
-                    "rejecting pod";
-                    "pod_name" => &pod_name
-                );
-                kubewarden::reject_request(
-                    Some(format!("pod name {} is not accepted", &pod_name)),
-                    None,
-                    None,
-                    None,
-                )
-            } else {
-                info!(LOG_DRAIN, "accepting resource");
-                kubewarden::accept_request()
+    match validation_request.extract_pod_spec_from_object() {
+        Ok(pod_spec) => {
+            if let Some(pod_spec) = pod_spec {
+                return validate_pod_spec(pod_spec);
             }
+            // If there is not pod spec, just accept it. There is no data to be validated.
+            kubewarden::accept_request()
         }
         Err(_) => {
-            // TODO: handle as you wish
             // We were forwarded a request we cannot unmarshal or
             // understand, just accept it
-            warn!(LOG_DRAIN, "cannot unmarshal resource: this policy does not know how to evaluate this resource; accept it");
             kubewarden::accept_request()
         }
     }
+}
+
+/// Scan all containers in containers, init_containers and ephemeral_containers.
+/// Returns reject_request if any secret var was found in an env_var in any container or
+/// accept_request otherwise.
+fn validate_pod_spec(pod_spec: PodSpec) -> CallResult {
+    let mut findings: HashSet<SecretRejected> = HashSet::new();
+    let secret_scanner = SecretScannerBuilder::new().build();
+
+    for container in pod_spec.containers {
+        if let Some(secrets_in_container) =
+            scan_env_vars(container.env, &secret_scanner, container.name)
+        {
+            findings.extend(secrets_in_container);
+        }
+    }
+
+    if let Some(init_containers) = pod_spec.init_containers {
+        for container in init_containers {
+            if let Some(secrets_in_container) =
+                scan_env_vars(container.env, &secret_scanner, container.name)
+            {
+                findings.extend(secrets_in_container);
+            }
+        }
+    }
+
+    if let Some(ephemeral_containers) = pod_spec.ephemeral_containers {
+        for container in ephemeral_containers {
+            if let Some(secrets_in_container) =
+                scan_env_vars(container.env, &secret_scanner, container.name)
+            {
+                findings.extend(secrets_in_container);
+            }
+        }
+    }
+
+    if !findings.is_empty() {
+        return kubewarden::reject_request(
+            Some(format!(
+                "The following secrets were found in environment variables -> {}",
+                create_error_message(findings)
+            )),
+            None,
+            None,
+            None,
+        );
+    }
+
+    kubewarden::accept_request()
+}
+
+fn scan_env_vars(
+    env_vars: Option<Vec<EnvVar>>,
+    secret_scanner: &SecretScanner,
+    container_name: String,
+) -> Option<HashSet<SecretRejected>> {
+    let mut findings: HashSet<SecretRejected> = HashSet::new();
+
+    if let Some(env_vars) = env_vars {
+        for env_var in env_vars {
+            if let Some(value) = env_var.value {
+                findings.extend(scan_env_var(
+                    value.as_bytes().to_vec(),
+                    secret_scanner,
+                    env_var.name,
+                    container_name.clone(),
+                ));
+            }
+        }
+    }
+
+    if findings.is_empty() {
+        None
+    } else {
+        Some(findings)
+    }
+}
+
+fn scan_env_var(
+    input: Vec<u8>,
+    ss: &SecretScanner,
+    key: String,
+    container: String,
+) -> HashSet<SecretRejected> {
+    let mut findings: HashSet<SecretRejected> = HashSet::new();
+    let lines = input.split(|&x| (x as char) == '\n');
+
+    for (_, new_line) in lines.enumerate() {
+        let results = ss.matches(new_line);
+        for (r, matches) in results {
+            let mut strings_found: Vec<String> = Vec::new();
+            for m in matches {
+                let result = ASCII
+                    .decode(&new_line[m.start()..m.end()], DecoderTrap::Ignore)
+                    .unwrap_or_else(|_| "<STRING DECODE ERROR>".parse().unwrap());
+                strings_found.push(result);
+            }
+            if !strings_found.is_empty() {
+                findings.insert(SecretRejected {
+                    reason: r.to_string(),
+                    key: key.clone(),
+                    container: container.clone(),
+                });
+            }
+        }
+    }
+    findings
+}
+
+fn create_error_message(secrets: HashSet<SecretRejected>) -> String {
+    let mut message = String::new();
+    for secret in secrets {
+        message.push_str(secret.to_string().as_str())
+    }
+
+    message
 }
 
 #[cfg(test)]
@@ -71,36 +186,38 @@ mod tests {
     use kubewarden_policy_sdk::test::Testcase;
 
     #[test]
-    fn accept_pod_with_valid_name() -> Result<(), ()> {
-        let request_file = "test_data/pod_creation.json";
+    fn reject_pod_with_secrets() -> Result<(), ()> {
+        let request_file = "test_data/pod_creation_with_secrets.json";
         let tc = Testcase {
-            name: String::from("Valid name"),
-            fixture_file: String::from(request_file),
-            expected_validation_result: true,
-            settings: Settings {},
-        };
-
-        let res = tc.eval(validate).unwrap();
-        assert!(
-            res.mutated_object.is_none(),
-            "Something mutated with test case: {}",
-            tc.name,
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn reject_pod_with_invalid_name() -> Result<(), ()> {
-        let request_file = "test_data/pod_creation_invalid_name.json";
-        let tc = Testcase {
-            name: String::from("Bad name"),
+            name: String::from("pod with secrets"),
             fixture_file: String::from(request_file),
             expected_validation_result: false,
             settings: Settings {},
         };
 
         let res = tc.eval(validate).unwrap();
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("The following secrets were found in environment variables"),
+            true
+        );
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("container: nginx, key: email, reason: Email address"),
+            true
+        );
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("container: nginx, key: rsa, reason: RSA private key"),
+            true
+        );
+
         assert!(
             res.mutated_object.is_none(),
             "Something mutated with test case: {}",
@@ -111,10 +228,52 @@ mod tests {
     }
 
     #[test]
-    fn accept_request_with_non_pod_resource() -> Result<(), ()> {
-        let request_file = "test_data/ingress_creation.json";
+    fn reject_pod_with_secrets_init_and_ephemeral_containers() -> Result<(), ()> {
+        let request_file = "test_data/pod_creation_with_secrets_init_and_ephemeral_containers.json";
         let tc = Testcase {
-            name: String::from("Ingress creation"),
+            name: String::from("pod with secrets in init and ephemeral containers"),
+            fixture_file: String::from(request_file),
+            expected_validation_result: false,
+            settings: Settings {},
+        };
+
+        let res = tc.eval(validate).unwrap();
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("The following secrets were found in environment variables"),
+            true
+        );
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("container: busybox, key: email, reason: Email address"),
+            true
+        );
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("container: nginx, key: rsa, reason: RSA private key"),
+            true
+        );
+
+        assert!(
+            res.mutated_object.is_none(),
+            "Something mutated with test case: {}",
+            tc.name,
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn accept_pod_creation_without_secrets() -> Result<(), ()> {
+        let request_file = "test_data/pod_creation_without_secrets.json";
+        let tc = Testcase {
+            name: String::from("pod without secrets"),
             fixture_file: String::from(request_file),
             expected_validation_result: true,
             settings: Settings {},
