@@ -1,21 +1,23 @@
 ---
 version: 0.1.0
 name: env-variable-secrets-scanner-policy
-displayName: LIKE NAME, BUT FANCIER
+displayName: Environment Variable Secrets Scanner
 createdAt: '2022-07-19T16:39:10+02:00'
-description: DESCRIPTION OF YOUR POLICY
+description: Reject Pods that contain secrets in an environment variable
 license: Apache-2.0
-homeURL: https://author1.website
+homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
 containersImages:
 - name: policy
   image: "ghcr.io/kubewarden/policies/env-variable-secrets-scanner-policy:v0.1.0"
 keywords:
-- this is freeform
+- secrets
+- api keys
+- tokens
 links:
 - name: policy
-  url: https://github.com/yourorg/env-variable-secrets-scanner-policy/releases/download/v0.1.0/policy.wasm
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.0/policy.wasm
 - name: source
-  url: POLICY HOMEPAGE URL
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
 provider:
   name: kubewarden
 recommendations:
