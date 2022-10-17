@@ -71,7 +71,7 @@ fn validate_pod_spec(pod_spec: PodSpec) -> CallResult {
 
     for container in pod_spec.containers {
         if let Some(secrets_in_container) =
-            scan_env_vars(container.env, &secret_scanner, container.name)
+            scan_env_vars(container.env, &secret_scanner, &container.name)
         {
             findings.extend(secrets_in_container);
         }
@@ -80,7 +80,7 @@ fn validate_pod_spec(pod_spec: PodSpec) -> CallResult {
     if let Some(init_containers) = pod_spec.init_containers {
         for container in init_containers {
             if let Some(secrets_in_container) =
-                scan_env_vars(container.env, &secret_scanner, container.name)
+                scan_env_vars(container.env, &secret_scanner, &container.name)
             {
                 findings.extend(secrets_in_container);
             }
@@ -90,7 +90,7 @@ fn validate_pod_spec(pod_spec: PodSpec) -> CallResult {
     if let Some(ephemeral_containers) = pod_spec.ephemeral_containers {
         for container in ephemeral_containers {
             if let Some(secrets_in_container) =
-                scan_env_vars(container.env, &secret_scanner, container.name)
+                scan_env_vars(container.env, &secret_scanner, &container.name)
             {
                 findings.extend(secrets_in_container);
             }
@@ -115,7 +115,7 @@ fn validate_pod_spec(pod_spec: PodSpec) -> CallResult {
 fn scan_env_vars(
     env_vars: Option<Vec<EnvVar>>,
     secret_scanner: &SecretScanner,
-    container_name: String,
+    container_name: &str,
 ) -> Option<HashSet<SecretRejected>> {
     let mut findings: HashSet<SecretRejected> = HashSet::new();
 
@@ -126,7 +126,7 @@ fn scan_env_vars(
                     value.as_bytes().to_vec(),
                     secret_scanner,
                     env_var.name,
-                    container_name.clone(),
+                    container_name,
                 ));
             }
         }
@@ -143,7 +143,7 @@ fn scan_env_var(
     input: Vec<u8>,
     ss: &SecretScanner,
     key: String,
-    container: String,
+    container: &str,
 ) -> HashSet<SecretRejected> {
     let mut findings: HashSet<SecretRejected> = HashSet::new();
     let lines = input.split(|&x| (x as char) == '\n');
@@ -162,7 +162,7 @@ fn scan_env_var(
                 findings.insert(SecretRejected {
                     reason: r.to_string(),
                     key: key.clone(),
-                    container: container.clone(),
+                    container: container.to_string(),
                 });
             }
         }
