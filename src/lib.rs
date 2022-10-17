@@ -54,11 +54,12 @@ fn validate(payload: &[u8]) -> CallResult {
             // If there is no pod spec, just accept it. There is no data to be validated.
             kubewarden::accept_request()
         }
-        Err(_) => {
-            // We were forwarded a request we cannot unmarshal or
-            // understand, just accept it
-            kubewarden::accept_request()
-        }
+        Err(_) => kubewarden::reject_request(
+            Some("Cannot parse validation request".to_string()),
+            None,
+            None,
+            None,
+        ),
     }
 }
 
