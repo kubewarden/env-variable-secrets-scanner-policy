@@ -175,11 +175,9 @@ dependencies = [
  "encoding",
  "k8s-openapi",
  "kubewarden-policy-sdk",
- "lazy_static",
  "rusty_hog_scanner",
  "serde",
  "serde_json",
- "slog",
 ]
 
 [[package]]

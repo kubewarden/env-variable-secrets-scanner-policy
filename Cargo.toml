@@ -12,10 +12,8 @@ crate-type = ["cdylib"]
 [dependencies]
 k8s-openapi = { version = "0.15.0", default_features = false, features = ["v1_24"] }
 kubewarden-policy-sdk = "0.8.0"
-lazy_static = "1.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-slog = "2.7"
 encoding = "0.2.33"
 #TODO replace once rusty-hog-scanner is available upstream
 rusty_hog_scanner = { git = "https://github.com/raulcabello/rusty-hog/", revision="fcc529f901ea043825d88a6caf66a35159844764" }
