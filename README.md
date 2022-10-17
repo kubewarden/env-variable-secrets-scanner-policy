@@ -4,11 +4,9 @@
 
 This policy will reject pods that contain a secret in an environment variable in any container. It scans environment 
 variables in all containers, init containers and ephemeral containers.
-This policy uses [rusty hog](https://github.com/newrelic/rusty-hog) as a secret scanner. It looks for
-all the secrets in the rusty-hog [default_rules.json](https://github.com/newrelic/rusty-hog/blob/v1.0.11/src/default_rules.json).
+The policy looks for the following secrets being leaked: RSA private keys, SSH private keys and API tokens for different services like Slack, Facebook tokens, AWS, Google, New Relic Keys, etc.
 
-Some secrets that will be detected are: Slack token, RSA private key, SSH private key, Facebook tokens, AWS tokens, Google API Keys, 
-New Relic Keys, ...  For a complete list visit [rusty-hog website](https://github.com/newrelic/rusty-hog)
+This policy is powered by the same rule engine used by [rusty hog](https://github.com/newrelic/rusty-hog), an open source secret scanner from New Relic.
 
 The policy can either target `Pods`, or [workload
 resources](https://kubernetes.io/docs/concepts/workloads/) (`Deployments`,

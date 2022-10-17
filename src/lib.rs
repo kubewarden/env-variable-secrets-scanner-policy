@@ -51,7 +51,7 @@ fn validate(payload: &[u8]) -> CallResult {
             if let Some(pod_spec) = pod_spec {
                 return validate_pod_spec(pod_spec);
             }
-            // If there is not pod spec, just accept it. There is no data to be validated.
+            // If there is no pod spec, just accept it. There is no data to be validated.
             kubewarden::accept_request()
         }
         Err(_) => {
