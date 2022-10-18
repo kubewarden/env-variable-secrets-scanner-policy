@@ -504,7 +504,7 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 [[package]]
 name = "rusty_hog_scanner"
 version = "0.1.0"
-source = "git+https://github.com/raulcabello/rusty-hog/#720ad810aefe2276511adbf079d5cc683653693b"
+source = "git+https://github.com/raulcabello/rusty-hog/#fcc529f901ea043825d88a6caf66a35159844764"
 dependencies = [
  "anyhow",
  "base64",
