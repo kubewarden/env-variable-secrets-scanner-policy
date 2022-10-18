@@ -13,6 +13,9 @@ keywords:
 - secrets
 - api keys
 - tokens
+- secret leak
+- confidential data
+- confidential data leak
 links:
 - name: policy
   url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.0/policy.wasm
@@ -23,6 +26,6 @@ provider:
 recommendations:
 - url: https://artifacthub.io/packages/helm/kubewarden/kubewarden-controller
 annotations:
-  kubewarden/resources: Pod # comma separated list
+  kubewarden/resources: Pod,Deployment,Replicaset,Statefulset,Daemonset,Replicationcontroller,Job,Cronjob
   kubewarden/mutation: false
   kubewarden/contextAware: false
