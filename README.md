@@ -3,7 +3,7 @@
 ## Description
 
 This policy will reject pods that contain a secret in an environment variable in any container. It scans environment 
-variables in all containers, init containers and ephemeral containers.
+variables in all containers, init containers and ephemeral containers. It will verify if the secret was encoded with base64.
 The policy looks for the following secrets being leaked: RSA private keys, SSH private keys and API tokens for different services like Slack, Facebook tokens, AWS, Google, New Relic Keys, etc.
 
 This policy is powered by the same rule engine used by [rusty hog](https://github.com/newrelic/rusty-hog), an open source secret scanner from New Relic.
