@@ -6,8 +6,6 @@ use kubewarden_policy_sdk::wapc_guest as guest;
 
 use k8s_openapi::api::core::v1::{EnvVar, PodSpec};
 extern crate kubewarden_policy_sdk as kubewarden;
-use encoding::all::ASCII;
-use encoding::{DecoderTrap, Encoding};
 use kubewarden::{protocol_version_guest, request::ValidationRequest, validate_settings};
 use rusty_hog_scanner::{SecretScanner, SecretScannerBuilder};
 use std::string::String;
@@ -24,7 +22,7 @@ pub extern "C" fn wapc_init() {
 
 /// Represents a secret that has been found in an env var
 #[derive(Eq, Hash, PartialEq, Debug)]
-struct SecretRejected {
+struct EnvVarFinding {
     /// name of the container where the secret was found
     container: String,
     /// reason of rejection. It describes the secret that it was found
@@ -33,7 +31,7 @@ struct SecretRejected {
     key: String,
 }
 
-impl fmt::Display for SecretRejected {
+impl fmt::Display for EnvVarFinding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -67,7 +65,7 @@ fn validate(payload: &[u8]) -> CallResult {
 /// Returns reject_request if any secret var was found in an env_var in any container or
 /// accept_request otherwise.
 fn validate_pod_spec(pod_spec: PodSpec) -> CallResult {
-    let mut findings: HashSet<SecretRejected> = HashSet::new();
+    let mut findings: HashSet<EnvVarFinding> = HashSet::new();
     let secret_scanner = SecretScannerBuilder::new().build();
 
     for container in pod_spec.containers {
@@ -117,8 +115,8 @@ fn scan_env_vars(
     env_vars: Option<Vec<EnvVar>>,
     secret_scanner: &SecretScanner,
     container_name: &str,
-) -> Option<HashSet<SecretRejected>> {
-    let mut findings: HashSet<SecretRejected> = HashSet::new();
+) -> Option<HashSet<EnvVarFinding>> {
+    let mut findings: HashSet<EnvVarFinding> = HashSet::new();
 
     if let Some(env_vars) = env_vars {
         for env_var in env_vars {
@@ -126,7 +124,7 @@ fn scan_env_vars(
                 findings.extend(scan_env_var(
                     value.as_bytes().to_vec(),
                     secret_scanner,
-                    env_var.name,
+                    env_var.name.as_str(),
                     container_name,
                 ));
             }
@@ -142,36 +140,47 @@ fn scan_env_vars(
 
 fn scan_env_var(
     input: Vec<u8>,
-    ss: &SecretScanner,
-    key: String,
+    secret_scanner: &SecretScanner,
+    key: &str,
     container: &str,
-) -> HashSet<SecretRejected> {
-    let mut findings: HashSet<SecretRejected> = HashSet::new();
-    let lines = input.split(|&x| (x as char) == '\n');
+) -> HashSet<EnvVarFinding> {
+    let mut findings = scan_text(&input, secret_scanner, key, container);
 
-    for (_, new_line) in lines.enumerate() {
-        let results = ss.matches(new_line);
-        for (r, matches) in results {
-            let mut strings_found: Vec<String> = Vec::new();
-            for m in matches {
-                let result = ASCII
-                    .decode(&new_line[m.start()..m.end()], DecoderTrap::Ignore)
-                    .unwrap_or_else(|_| "<STRING DECODE ERROR>".parse().unwrap());
-                strings_found.push(result);
-            }
-            if !strings_found.is_empty() {
-                findings.insert(SecretRejected {
-                    reason: r.to_string(),
-                    key: key.clone(),
-                    container: container.to_string(),
-                });
-            }
+    // try decoding content from base64 if no secret was found
+    if findings.is_empty() {
+        let input = base64::decode(input);
+        if let Ok(input) = input {
+            findings = scan_text(&input, secret_scanner, key, container);
         }
     }
+
     findings
 }
 
-fn create_error_message(secrets: HashSet<SecretRejected>) -> String {
+fn scan_text(
+    input: &[u8],
+    secret_scanner: &SecretScanner,
+    key: &str,
+    container: &str,
+) -> HashSet<EnvVarFinding> {
+    let mut findings: HashSet<EnvVarFinding> = HashSet::new();
+    let lines = input.split(|&x| (x as char) == '\n');
+
+    for (_, new_line) in lines.enumerate() {
+        let results = secret_scanner.matches(new_line);
+        for (reason, _) in results {
+            findings.insert(EnvVarFinding {
+                reason: reason.to_string(),
+                key: key.to_string(),
+                container: container.to_string(),
+            });
+        }
+    }
+
+    findings
+}
+
+fn create_error_message(secrets: HashSet<EnvVarFinding>) -> String {
     let mut message = String::new();
     for secret in secrets {
         message.push_str(secret.to_string().as_str())
@@ -209,6 +218,41 @@ mod tests {
                 .clone()
                 .unwrap_or_default()
                 .contains("container: nginx, key: email, reason: Email address"),
+            true
+        );
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("container: nginx, key: rsa, reason: RSA private key"),
+            true
+        );
+
+        assert!(
+            res.mutated_object.is_none(),
+            "Something mutated with test case: {}",
+            tc.name,
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn reject_pod_with_secrets_base64() -> Result<(), ()> {
+        let request_file = "test_data/pod_creation_with_secrets_base64.json";
+        let tc = Testcase {
+            name: String::from("pod with secrets"),
+            fixture_file: String::from(request_file),
+            expected_validation_result: false,
+            settings: Settings {},
+        };
+
+        let res = tc.eval(validate).unwrap();
+        assert_eq!(
+            res.message
+                .clone()
+                .unwrap_or_default()
+                .contains("The following secrets were found in environment variables"),
             true
         );
         assert_eq!(

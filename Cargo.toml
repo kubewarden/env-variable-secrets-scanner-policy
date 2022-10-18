@@ -15,5 +15,6 @@ kubewarden-policy-sdk = "0.8.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 encoding = "0.2.33"
+base64 = "0.13.0"
 #TODO replace once rusty-hog-scanner is available upstream
 rusty_hog_scanner = { git = "https://github.com/raulcabello/rusty-hog/", revision="fcc529f901ea043825d88a6caf66a35159844764" }
