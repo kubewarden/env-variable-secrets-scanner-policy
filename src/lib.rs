@@ -25,7 +25,7 @@ pub extern "C" fn wapc_init() {
 /// Represents a secret that has been found in an env var
 #[derive(Eq, Hash, PartialEq, Debug)]
 struct SecretRejected {
-    /// nome of the container where the secret was found
+    /// name of the container where the secret was found
     container: String,
     /// reason of rejection. It describes the secret that it was found
     reason: String,
