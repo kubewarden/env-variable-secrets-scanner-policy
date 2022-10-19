@@ -1,0 +1,31 @@
+---
+version: 0.1.0
+name: env-variable-secrets-scanner-policy
+displayName: Environment Variable Secrets Scanner
+createdAt: '2022-07-19T16:39:10+02:00'
+description: Reject Pods that contain secrets in an environment variable
+license: Apache-2.0
+homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
+containersImages:
+- name: policy
+  image: "ghcr.io/kubewarden/policies/env-variable-secrets-scanner-policy:v0.1.0"
+keywords:
+- secrets
+- api keys
+- tokens
+- secret leak
+- confidential data
+- confidential data leak
+links:
+- name: policy
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.0/policy.wasm
+- name: source
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
+provider:
+  name: kubewarden
+recommendations:
+- url: https://artifacthub.io/packages/helm/kubewarden/kubewarden-controller
+annotations:
+  kubewarden/resources: Pod,Deployment,Replicaset,Statefulset,Daemonset,Replicationcontroller,Job,Cronjob
+  kubewarden/mutation: false
+  kubewarden/contextAware: false
