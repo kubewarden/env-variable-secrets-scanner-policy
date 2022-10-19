@@ -27,8 +27,8 @@ jobs:
     uses: kubewarden/github-actions/.github/workflows/reusable-release-policy-rust.yml@v1
     with:
       input-wasm: env_variable_secrets_scanner_policy
-      oci-target: ghcr.io/kubewarden/policies/env-variable-secrets-scanner-policy
-    
+      oci-target: ghcr.io/kubewarden/policies/env-variable-secrets-scanner
+
     secrets:
       workflow-pat: ${{ secrets.WORKFLOW_PAT }}
-    
+
