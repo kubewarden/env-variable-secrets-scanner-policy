@@ -7,7 +7,7 @@ mutating: false
 contextAware: false
 executionMode: kubewarden-wapc
 annotations:
-  io.kubewarden.policy.title: env-variable-secrets-scanner-policy
+  io.kubewarden.policy.title: env-variable-secrets-scanner
   io.kubewarden.policy.description: Policy that inspects env vars and rejects a request if a secret was found
   io.kubewarden.policy.author: raulcabello <raul.cabello@suse.com>
   io.kubewarden.policy.url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
