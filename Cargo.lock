@@ -170,7 +170,7 @@ checksum = "a246d82be1c9d791c5dfde9a2bd045fc3cbba3fa2b11ad558f27d01712f00569"
 
 [[package]]
 name = "env-variable-secrets-scanner-policy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64",
  "encoding",
@@ -505,7 +505,7 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 [[package]]
 name = "rusty_hog_scanner"
 version = "0.1.0"
-source = "git+https://github.com/raulcabello/rusty-hog/#fcc529f901ea043825d88a6caf66a35159844764"
+source = "git+https://github.com/raulcabello/rusty-hog/#981052cc194b25b881acc089e806799d58d97637"
 dependencies = [
  "anyhow",
  "base64",
