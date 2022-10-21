@@ -168,12 +168,14 @@ fn scan_text(
 
     for (_, new_line) in lines.enumerate() {
         let results = secret_scanner.matches(new_line);
-        for (reason, _) in results {
-            findings.insert(EnvVarFinding {
-                reason: reason.to_string(),
-                key: key.to_string(),
-                container: container.to_string(),
-            });
+        for (reason, matches) in results {
+            for _ in matches {
+                findings.insert(EnvVarFinding {
+                    reason: reason.to_string(),
+                    key: key.to_string(),
+                    container: container.to_string(),
+                });
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 [package]
 name = "env-variable-secrets-scanner-policy"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["raulcabello <raul.cabello@suse.com>"]
 edition = "2018"
 
@@ -17,4 +17,4 @@ serde_json = "1.0"
 encoding = "0.2.33"
 base64 = "0.13.0"
 #TODO replace once rusty-hog-scanner is available upstream
-rusty_hog_scanner = { git = "https://github.com/raulcabello/rusty-hog/", revision="fcc529f901ea043825d88a6caf66a35159844764" }
+rusty_hog_scanner = { git = "https://github.com/raulcabello/rusty-hog/", revision="981052cc194b25b881acc089e806799d58d97637" }
