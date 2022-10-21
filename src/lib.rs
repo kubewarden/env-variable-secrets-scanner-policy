@@ -6,8 +6,6 @@ use kubewarden_policy_sdk::wapc_guest as guest;
 
 use k8s_openapi::api::core::v1::{EnvVar, PodSpec};
 extern crate kubewarden_policy_sdk as kubewarden;
-use encoding::all::ASCII;
-use encoding::{DecoderTrap, Encoding};
 use kubewarden::{protocol_version_guest, request::ValidationRequest, validate_settings};
 use rusty_hog_scanner::{SecretScanner, SecretScannerBuilder};
 use std::string::String;
@@ -171,14 +169,7 @@ fn scan_text(
     for (_, new_line) in lines.enumerate() {
         let results = secret_scanner.matches(new_line);
         for (reason, matches) in results {
-            let mut strings_found: Vec<String> = Vec::new();
-            for m in matches {
-                let result = ASCII
-                    .decode(&new_line[m.start()..m.end()], DecoderTrap::Ignore)
-                    .unwrap_or_else(|_| "<STRING DECODE ERROR>".parse().unwrap());
-                strings_found.push(result);
-            }
-            if !strings_found.is_empty() {
+            for _ in matches {
                 findings.insert(EnvVarFinding {
                     reason: reason.to_string(),
                     key: key.to_string(),
