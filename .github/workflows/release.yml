@@ -28,7 +28,3 @@ jobs:
     with:
       input-wasm: env_variable_secrets_scanner_policy
       oci-target: ghcr.io/kubewarden/policies/env-variable-secrets-scanner
-
-    secrets:
-      workflow-pat: ${{ secrets.WORKFLOW_PAT }}
-
