@@ -1,14 +1,12 @@
-use std::collections::HashSet;
-use std::fmt;
-
 use guest::prelude::*;
 use kubewarden_policy_sdk::wapc_guest as guest;
-
-use k8s_openapi::api::core::v1::{EnvVar, PodSpec};
 extern crate kubewarden_policy_sdk as kubewarden;
+
+use base64::{engine::general_purpose::STANDARD as BASE64_STD_ENGINE, Engine as _};
+use k8s_openapi::api::core::v1::{EnvVar, PodSpec};
 use kubewarden::{protocol_version_guest, request::ValidationRequest, validate_settings};
 use rusty_hog_scanner::{SecretScanner, SecretScannerBuilder};
-use std::string::String;
+use std::{collections::HashSet, fmt, string::String};
 
 mod settings;
 use settings::Settings;
@@ -148,7 +146,7 @@ fn scan_env_var(
 
     // try decoding content from base64 if no secret was found
     if findings.is_empty() {
-        let input = base64::decode(input);
+        let input = BASE64_STD_ENGINE.decode(input);
         if let Ok(input) = input {
             findings = scan_text(&input, secret_scanner, key, container);
         }
