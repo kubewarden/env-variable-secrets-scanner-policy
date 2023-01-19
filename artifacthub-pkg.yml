@@ -2,7 +2,7 @@
 version: 0.1.3
 name: env-variable-secrets-scanner
 displayName: Environment Variable Secrets Scanner
-createdAt: '2022-07-19T16:39:10+02:00'
+createdAt: '2023-01-19T14:46:21+02:00'
 description: Reject Pods that contain secrets in an environment variable
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
