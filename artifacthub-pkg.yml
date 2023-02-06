@@ -1,14 +1,14 @@
 ---
-version: 0.1.4
+version: 0.1.5
 name: env-variable-secrets-scanner
 displayName: Environment Variable Secrets Scanner
-createdAt: '2023-01-20T16:46:21+02:00'
+createdAt: '2023-02-06T16:46:21+02:00'
 description: Reject Pods that contain secrets in an environment variable
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
 containersImages:
 - name: policy
-  image: "ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.4"
+  image: "ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.5"
 keywords:
 - secrets
 - api keys
@@ -18,7 +18,7 @@ keywords:
 - confidential data leak
 links:
 - name: policy
-  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.4/policy.wasm
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.5/policy.wasm
 - name: source
   url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
 provider:
@@ -31,7 +31,19 @@ annotations:
   kubewarden/contextAware: false
   kubewarden/rules: |
     rules:
-    - apiGroups: [""]
-      apiVersions: ["v1"]
-      resources: ["deployment","replicaset","statefulset","daemonset","replicationcontroller","job","cronjob","pod"]
-      operations: ["CREATE", "UPDATE"]
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        operations: ["CREATE"] # kubernetes doesn't allow to add/remove privileged containers to an already running pod
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["replicationcontrollers"]
+        operations: ["CREATE", "UPDATE"]
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments","replicasets","statefulsets","daemonsets"]
+        operations: ["CREATE", "UPDATE"]
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        resources: ["jobs","cronjobs"]
+        operations: ["CREATE", "UPDATE"]
