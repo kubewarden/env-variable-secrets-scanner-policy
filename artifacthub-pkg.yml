@@ -1,14 +1,19 @@
----
-version: 0.1.5
+# Kubewarden Artifacthub Package config
+#
+# Use this config to submit the policy to https://artifacthub.io.
+#
+# This config can be saved to its default location with:
+#   kwctl scaffold artifacthub > artifacthub-pkg.yml 
+version: 0.1.6
 name: env-variable-secrets-scanner
 displayName: Environment Variable Secrets Scanner
-createdAt: '2023-02-06T16:46:21+02:00'
-description: Reject Pods that contain secrets in an environment variable
+createdAt: 2023-03-21T12:09:38.582789264Z
+description: Policy that inspects env vars and rejects a request if a secret was found
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
 containersImages:
 - name: policy
-  image: "ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.5"
+  image: ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.6
 keywords:
 - secrets
 - api keys
@@ -18,32 +23,61 @@ keywords:
 - confidential data leak
 links:
 - name: policy
-  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.5/policy.wasm
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.6/policy.wasm
 - name: source
   url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
+install: |
+  The policy can be obtained using [`kwctl`](https://github.com/kubewarden/kwctl):
+  ```console
+  kwctl pull ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.6
+  ```
+maintainers:
+- name: Kubewarden developers
+  email: cncf-kubewarden-maintainers@lists.cncf.io
 provider:
   name: kubewarden
 recommendations:
 - url: https://artifacthub.io/packages/helm/kubewarden/kubewarden-controller
 annotations:
+  kubewarden/mutation: 'false'
   kubewarden/resources: Pod,Deployment,Replicaset,Statefulset,Daemonset,Replicationcontroller,Job,Cronjob
-  kubewarden/mutation: false
-  kubewarden/contextAware: false
   kubewarden/rules: |
-    rules:
-      - apiGroups: [""]
-        apiVersions: ["v1"]
-        resources: ["pods"]
-        operations: ["CREATE"] # kubernetes doesn't allow to add/remove privileged containers to an already running pod
-      - apiGroups: [""]
-        apiVersions: ["v1"]
-        resources: ["replicationcontrollers"]
-        operations: ["CREATE", "UPDATE"]
-      - apiGroups: ["apps"]
-        apiVersions: ["v1"]
-        resources: ["deployments","replicasets","statefulsets","daemonsets"]
-        operations: ["CREATE", "UPDATE"]
-      - apiGroups: ["batch"]
-        apiVersions: ["v1"]
-        resources: ["jobs","cronjobs"]
-        operations: ["CREATE", "UPDATE"]
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      resources:
+      - pods
+      operations:
+      - CREATE
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      resources:
+      - replicationcontrollers
+      operations:
+      - CREATE
+      - UPDATE
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      resources:
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+      operations:
+      - CREATE
+      - UPDATE
+    - apiGroups:
+      - batch
+      apiVersions:
+      - v1
+      resources:
+      - jobs
+      - cronjobs
+      operations:
+      - CREATE
+      - UPDATE
