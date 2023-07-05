@@ -1,20 +1,43 @@
 rules:
-  - apiGroups: [""]
-    apiVersions: ["v1"]
-    resources: ["pods"]
-    operations: ["CREATE"] # kubernetes doesn't allow to add/remove privileged containers to an already running pod
-  - apiGroups: [""]
-    apiVersions: ["v1"]
-    resources: ["replicationcontrollers"]
-    operations: ["CREATE", "UPDATE"]
-  - apiGroups: ["apps"]
-    apiVersions: ["v1"]
-    resources: ["deployments","replicasets","statefulsets","daemonsets"]
-    operations: ["CREATE", "UPDATE"]
-  - apiGroups: ["batch"]
-    apiVersions: ["v1"]
-    resources: ["jobs","cronjobs"]
-    operations: ["CREATE", "UPDATE"]
+  - apiGroups:
+      - ''
+    apiVersions:
+      - v1
+    resources:
+      - pods
+    operations:
+      - CREATE
+  - apiGroups:
+      - ''
+    apiVersions:
+      - v1
+    resources:
+      - replicationcontrollers
+    operations:
+      - CREATE
+      - UPDATE
+  - apiGroups:
+      - apps
+    apiVersions:
+      - v1
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+    operations:
+      - CREATE
+      - UPDATE
+  - apiGroups:
+      - batch
+    apiVersions:
+      - v1
+    resources:
+      - jobs
+      - cronjobs
+    operations:
+      - CREATE
+      - UPDATE
 mutating: false
 contextAware: false
 executionMode: kubewarden-wapc
@@ -22,12 +45,16 @@ annotations:
   # artifacthub specific
   io.artifacthub.displayName: Environment Variable Secrets Scanner
   io.artifacthub.resources: Pod,Deployment,Replicaset,Statefulset,Daemonset,Replicationcontroller,Job,Cronjob
-  io.artifacthub.keywords: secrets, api keys, tokens, secret leak, confidential data, confidential data leak
+  io.artifacthub.keywords: secrets, api keys, tokens, secret leak, confidential data,
+    confidential data leak
+  # kubewarden specific
   io.kubewarden.policy.ociUrl: ghcr.io/kubewarden/policies/env-variable-secrets-scanner
-  # rest
   io.kubewarden.policy.title: env-variable-secrets-scanner
-  io.kubewarden.policy.description: Policy that inspects env vars and rejects a request if a secret was found
-  io.kubewarden.policy.author: "Kubewarden developers <cncf-kubewarden-maintainers@lists.cncf.io>"
+  io.kubewarden.policy.description: Policy that inspects env vars and rejects a request
+    if a secret was found
+  io.kubewarden.policy.author: Kubewarden developers <cncf-kubewarden-maintainers@lists.cncf.io>
   io.kubewarden.policy.url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
   io.kubewarden.policy.source: https://github.com/kubewarden/env-variable-secrets-scanner-policy
   io.kubewarden.policy.license: Apache-2.0
+  io.kubewarden.policy.category: Resource validation
+  io.kubewarden.policy.severity: medium
