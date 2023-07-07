@@ -56,5 +56,5 @@ annotations:
   io.kubewarden.policy.url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
   io.kubewarden.policy.source: https://github.com/kubewarden/env-variable-secrets-scanner-policy
   io.kubewarden.policy.license: Apache-2.0
-  io.kubewarden.policy.category: Resource validation
+  io.kubewarden.policy.category: Secrets
   io.kubewarden.policy.severity: medium
