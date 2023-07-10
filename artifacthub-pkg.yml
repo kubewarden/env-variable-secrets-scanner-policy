@@ -1,0 +1,83 @@
+# Kubewarden Artifacthub Package config
+#
+# Use this config to submit the policy to https://artifacthub.io.
+#
+# This config can be saved to its default location with:
+#   kwctl scaffold artifacthub > artifacthub-pkg.yml 
+version: 0.1.7
+name: env-variable-secrets-scanner
+displayName: Environment Variable Secrets Scanner
+createdAt: 2023-07-07T19:14:30.193712924Z
+description: Policy that inspects env vars and rejects a request if a secret was found
+license: Apache-2.0
+homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
+containersImages:
+- name: policy
+  image: ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.7
+keywords:
+- secrets
+- api keys
+- tokens
+- secret leak
+- confidential data
+- confidential data leak
+links:
+- name: policy
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy/releases/download/v0.1.7/policy.wasm
+- name: source
+  url: https://github.com/kubewarden/env-variable-secrets-scanner-policy
+install: |
+  The policy can be obtained using [`kwctl`](https://github.com/kubewarden/kwctl):
+  ```console
+  kwctl pull ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.7
+  ```
+maintainers:
+- name: Kubewarden developers
+  email: cncf-kubewarden-maintainers@lists.cncf.io
+provider:
+  name: kubewarden
+recommendations:
+- url: https://artifacthub.io/packages/helm/kubewarden/kubewarden-controller
+annotations:
+  kubewarden/mutation: 'false'
+  kubewarden/resources: Pod,Deployment,Replicaset,Statefulset,Daemonset,Replicationcontroller,Job,Cronjob
+  kubewarden/rules: |
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      resources:
+      - pods
+      operations:
+      - CREATE
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      resources:
+      - replicationcontrollers
+      operations:
+      - CREATE
+      - UPDATE
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      resources:
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+      operations:
+      - CREATE
+      - UPDATE
+    - apiGroups:
+      - batch
+      apiVersions:
+      - v1
+      resources:
+      - jobs
+      - cronjobs
+      operations:
+      - CREATE
+      - UPDATE
