@@ -7,7 +7,7 @@
 version: 0.1.7
 name: env-variable-secrets-scanner
 displayName: Environment Variable Secrets Scanner
-createdAt: 2023-07-07T19:14:30.193712924Z
+createdAt: 2023-10-16T07:39:38.035662785Z
 description: Policy that inspects env vars and rejects a request if a secret was found
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/env-variable-secrets-scanner-policy
@@ -30,6 +30,10 @@ install: |
   The policy can be obtained using [`kwctl`](https://github.com/kubewarden/kwctl):
   ```console
   kwctl pull ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.7
+  ```
+  Then, generate the policy manifest and tune it to your liking. For example:
+  ```console
+  kwctl scaffold manifest -t ClusterAdmissionPolicy registry://ghcr.io/kubewarden/policies/env-variable-secrets-scanner:v0.1.7
   ```
 maintainers:
 - name: Kubewarden developers
