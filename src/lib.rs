@@ -164,7 +164,7 @@ fn scan_text(
     let mut findings: HashSet<EnvVarFinding> = HashSet::new();
     let lines = input.split(|&x| (x as char) == '\n');
 
-    for (_, new_line) in lines.enumerate() {
+    for new_line in lines.into_iter() {
         let results = secret_scanner.matches(new_line);
         for (reason, matches) in results {
             for _ in matches {
@@ -206,27 +206,21 @@ mod tests {
         };
 
         let res = tc.eval(validate).unwrap();
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("The following secrets were found in environment variables"),
-            true
-        );
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("container: nginx, key: email, reason: Email address"),
-            true
-        );
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("container: nginx, key: rsa, reason: RSA private key"),
-            true
-        );
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("The following secrets were found in environment variables"),);
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("container: nginx, key: email, reason: Email address"),);
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("container: nginx, key: rsa, reason: RSA private key"),);
 
         assert!(
             res.mutated_object.is_none(),
@@ -248,20 +242,16 @@ mod tests {
         };
 
         let res = tc.eval(validate).unwrap();
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("The following secrets were found in environment variables"),
-            true
-        );
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("container: nginx, key: rsa, reason: RSA private key"),
-            true
-        );
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("The following secrets were found in environment variables"),);
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("container: nginx, key: rsa, reason: RSA private key"),);
 
         assert!(
             res.mutated_object.is_none(),
@@ -283,27 +273,21 @@ mod tests {
         };
 
         let res = tc.eval(validate).unwrap();
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("The following secrets were found in environment variables"),
-            true
-        );
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("container: busybox, key: email, reason: Email address"),
-            true
-        );
-        assert_eq!(
-            res.message
-                .clone()
-                .unwrap_or_default()
-                .contains("container: nginx, key: rsa, reason: RSA private key"),
-            true
-        );
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("The following secrets were found in environment variables"),);
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("container: busybox, key: email, reason: Email address"),);
+        assert!(res
+            .message
+            .clone()
+            .unwrap_or_default()
+            .contains("container: nginx, key: rsa, reason: RSA private key"),);
 
         assert!(
             res.mutated_object.is_none(),
