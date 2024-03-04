@@ -17,5 +17,5 @@ kubewarden-policy-sdk = "0.10.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 encoding = "0.2.33"
-base64 = "0.21.7"
+base64 = "0.22.0"
 rusty_hog_scanner = { git = "https://github.com/newrelic/rusty-hog/", rev = "0a5c56ef546093d78fbc824b80fd82999c9af4c0" }
