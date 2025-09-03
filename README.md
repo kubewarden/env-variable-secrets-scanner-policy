@@ -44,9 +44,11 @@ Both have trade-offs:
 > enough.
 >
 > To work around this issue, users can deploy this policy on a dedicated policy
-> server where the execution timeout is increased or even disabled. Check our
+> server where the execution timeout is increased or even disabled. For
+> example, setting the policy `spec.timeoutEvalSeconds` to `10` (since
+> Kubewarden 1.29) or configuring the PolicyServer. Check our
 > [documentation](https://docs.kubewarden.io/reference/policy-evaluation-timeout)
-> on how to change this configuration.
+> for more info.
 
 ## Settings
 
